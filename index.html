@@ -63,22 +63,25 @@
       // 칼로리 및 영양 상태 계산 로직
       const calculateNutrition = () => {
         let estimatedCalories = 0;
-        if (answers.mealCount === '1끼 이하') estimatedCalories = 500;
-        else if (answers.mealCount === '2끼') estimatedCalories = 1100;
-        else if (answers.mealCount === '3끼 정식') estimatedCalories = 1650;
+        let statusText = '';
+        let statusColor = '';
+
+        if (answers.mealCount === '1끼 이하') estimatedCalories += 500;
+        else if (answers.mealCount === '2끼') estimatedCalories += 1100;
+        else if (answers.mealCount === '3끼 정식') estimatedCalories += 1600;
 
         const hasProtein = answers.protein === '네, 잘 챙겨 먹었습니다';
         const hasVeggie = answers.veggie === '매 끼니 섭취';
-
-        let statusText = '양호하지만 일부 영양 보충이 필요합니다.';
-        let statusColor = 'bg-amber-100 text-amber-800 border-amber-300';
-
+        
         if (answers.mealCount === '3끼 정식' && hasProtein && hasVeggie) {
-          statusText = '매우 균형 잡힌 훌륭한 식단입니다!';
-          statusColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+          statusText = '매우 우수한 균형 밥상입니다!';
+          statusColor = 'text-emerald-600 bg-emerald-50 border-emerald-200';
         } else if (answers.mealCount === '1끼 이하' || (!hasProtein && !hasVeggie)) {
           statusText = '영양 섭취 부족 주의가 필요합니다.';
-          statusColor = 'bg-rose-100 text-rose-800 border-rose-300';
+          statusColor = 'text-rose-600 bg-rose-50 border-rose-200';
+        } else {
+          statusText = '양호하지만 일부 영양소 보충이 필요합니다.';
+          statusColor = 'text-amber-700 bg-amber-50 border-amber-200';
         }
 
         return { estimatedCalories, statusText, statusColor, hasProtein, hasVeggie };
@@ -220,61 +223,65 @@
             {step === 'result' && nutritionResult && (
               <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 space-y-6">
                 <div class="text-center space-y-2">
-                  <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-3">
                     <i data-lucide="calculator" class="w-8 h-8"></i>
                   </div>
-                  <h2 class="text-2xl font-bold text-gray-800">영양 진단 결과</h2>
-                  <div class={`inline-block px-4 py-1.5 rounded-full text-xs font-bold border ${nutritionResult.statusColor}`}>
+                  <h2 class="text-2xl font-bold text-gray-800">오늘의 영양 진단 결과</h2>
+                  <div class={`inline-block px-4 py-2 rounded-xl text-sm font-bold border ${nutritionResult.statusColor}`}>
                     {nutritionResult.statusText}
                   </div>
                 </div>
 
-                {/* 추정 칼로리 표시 박스 */}
-                <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 text-center space-y-1">
-                  <span class="text-xs font-bold text-amber-800">오늘 추정 섭취 칼로리</span>
+                <div class="bg-amber-50/80 p-5 rounded-2xl border border-amber-200/70 text-center space-y-1">
+                  <span class="text-xs font-semibold text-amber-800">오늘 하루 추정 칼로리 섭취량</span>
                   <div class="text-3xl font-extrabold text-amber-900">
                     약 {nutritionResult.estimatedCalories} <span class="text-lg font-bold">kcal</span>
                   </div>
                   <p class="text-xs text-amber-700 mt-1">
-                    * 어르신 하루 권장량: 약 1,600 ~ 2,000 kcal
+                    * 어르신 하루 권장 칼로리: 약 1,600 ~ 2,000 kcal
                   </p>
                 </div>
 
-                {/* 영양소 피드백 */}
-                <div class="space-y-2.5">
-                  <h3 class="font-bold text-gray-800 text-sm">💡 맞춤 피드백</h3>
+                <div class="space-y-3">
+                  <h3 class="font-bold text-gray-800 text-md">📌 맞춤 영양 피드백</h3>
                   
-                  <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
-                    <div class="font-bold text-gray-700">· 단백질 섭취</div>
-                    <p class="text-gray-600">
+                  <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-sm space-y-1">
+                    <div class="font-semibold text-gray-800 flex items-center gap-1.5">
+                      <i data-lucide="beef" class="w-4 h-4 text-rose-500"></i> 단백질 섭취
+                    </div>
+                    <p class="text-gray-600 text-xs">
                       {nutritionResult.hasProtein
-                        ? '단백질을 잘 챙겨 드시고 계십니다. 근력 유지에 좋습니다.'
-                        : '달걀, 두부, 고기, 생선 등 단백질 반찬을 하루 1회 이상 꼭 챙겨 드세요.'}
+                        ? '근력 유지를 위해 단백질을 잘 챙겨 드시고 계십니다.'
+                        : '매 끼니 매일 달걀, 두부, 고기, 생선 중 1가지는 꼭 챙겨 드세요!'}
                     </p>
                   </div>
 
-                  <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
-                    <div class="font-bold text-gray-700">· 채소 및 비타민</div>
-                    <p class="text-gray-600">
+                  <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-sm space-y-1">
+                    <div class="font-semibold text-gray-800 flex items-center gap-1.5">
+                      <i data-lucide="salad" class="w-4 h-4 text-emerald-500"></i> 채소류 섭취
+                    </div>
+                    <p class="text-gray-600 text-xs">
                       {nutritionResult.hasVeggie
-                        ? '채소를 매 끼니 잘 섭취하고 계십니다.'
-                        : '소화와 비타민 섭취를 위해 푹 익힌 나물이나 채소를 매 끼니 드시면 좋습니다.'}
+                        ? '비타민과 식이섬유를 충분히 섭취하고 계십니다.'
+                        : '소화를 돕고 비타민을 채우기 위해 나물이나 데친 채소를 더 드셔보세요.'}
                     </p>
                   </div>
 
-                  <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
-                    <div class="font-bold text-gray-700">· 수분 보충</div>
-                    <p class="text-gray-600">
+                  <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200 text-sm space-y-1">
+                    <div class="font-semibold text-gray-800 flex items-center gap-1.5">
+                      <i data-lucide="droplet" class="w-4 h-4 text-blue-500"></i> 수분 보충
+                    </div>
+                    <p class="text-gray-600 text-xs">
                       {answers.water === '6컵 이상'
-                        ? '수분 섭취 상태가 훌륭합니다.'
-                        : '목이 마르지 않더라도 자주 물 한 컵씩 드시는 습관이 필요합니다.'}
+                        ? '충분한 수분을 섭취 중입니다. 아주 잘하고 계십니다!'
+                        : '갈증을 느끼지 않더라도 목마르기 전에 하루 5~6컵 이상 물을 마셔주세요.'}
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={handleReset}
-                  class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-2xl transition active:scale-95 shadow-sm"
+                  class="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-2xl transition active:scale-95 shadow-md"
                 >
                   처음으로 돌아가기
                 </button>
