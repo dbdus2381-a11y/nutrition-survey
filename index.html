@@ -21,7 +21,7 @@
     const { useState, useEffect } = React;
 
     function NutritionSurveyApp() {
-      const [step, setStep] = useState('home'); // 'home' | 'survey' | 'result'
+      const [step, setStep] = useState('home');
       const [answers, setAnswers] = useState({
         mealCount: '',
         protein: '',
@@ -60,9 +60,34 @@
         window.scrollTo(0, 0);
       };
 
+      // 칼로리 및 영양 상태 계산 로직
+      const calculateNutrition = () => {
+        let estimatedCalories = 0;
+        if (answers.mealCount === '1끼 이하') estimatedCalories = 500;
+        else if (answers.mealCount === '2끼') estimatedCalories = 1100;
+        else if (answers.mealCount === '3끼 정식') estimatedCalories = 1650;
+
+        const hasProtein = answers.protein === '네, 잘 챙겨 먹었습니다';
+        const hasVeggie = answers.veggie === '매 끼니 섭취';
+
+        let statusText = '양호하지만 일부 영양 보충이 필요합니다.';
+        let statusColor = 'bg-amber-100 text-amber-800 border-amber-300';
+
+        if (answers.mealCount === '3끼 정식' && hasProtein && hasVeggie) {
+          statusText = '매우 균형 잡힌 훌륭한 식단입니다!';
+          statusColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        } else if (answers.mealCount === '1끼 이하' || (!hasProtein && !hasVeggie)) {
+          statusText = '영양 섭취 부족 주의가 필요합니다.';
+          statusColor = 'bg-rose-100 text-rose-800 border-rose-300';
+        }
+
+        return { estimatedCalories, statusText, statusColor, hasProtein, hasVeggie };
+      };
+
+      const nutritionResult = step === 'result' ? calculateNutrition() : null;
+
       return (
         <div class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4">
-          {/* 헤더 */}
           <header class="text-center py-6 border-b border-amber-200/60 bg-white/80 rounded-2xl shadow-sm mb-6">
             <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full mb-2">
               지역사회 간호학 리빙랩 프로젝트
@@ -71,7 +96,6 @@
             <p class="text-sm text-gray-600 mt-1">오늘 나의 식생활 영양 상태 체크하기</p>
           </header>
 
-          {/* 메인 콘텐츠 영역 */}
           <main class="flex-1">
             {step === 'home' && (
               <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 text-center space-y-6">
@@ -81,7 +105,7 @@
                 <div>
                   <h2 class="text-xl font-bold text-gray-800">식사 습관 간단 점검</h2>
                   <p class="text-gray-600 text-sm mt-2 leading-relaxed">
-                    몇 가지 간단한 질문으로 오늘 드신 식사의 영양 균형을 확인해보세요.
+                    몇 가지 간단한 질문으로 오늘 드신 식사의 칼로리와 영양 균형을 확인해보세요.
                   </p>
                 </div>
                 <button
@@ -96,7 +120,6 @@
 
             {step === 'survey' && (
               <form onSubmit={handleSubmit} class="space-y-6">
-                {/* Q1 */}
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
                   <label class="font-bold text-gray-800 text-base block">
                     1. 오늘 식사는 몇 끼를 드셨나요?
@@ -119,7 +142,6 @@
                   </div>
                 </div>
 
-                {/* Q2 */}
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
                   <label class="font-bold text-gray-800 text-base block">
                     2. 단백질 식품(고기, 생선, 달걀, 두부 등)을 드셨나요?
@@ -142,7 +164,6 @@
                   </div>
                 </div>
 
-                {/* Q3 */}
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
                   <label class="font-bold text-gray-800 text-base block">
                     3. 신선한 채소나 나물 반찬을 섭취하셨나요?
@@ -165,7 +186,6 @@
                   </div>
                 </div>
 
-                {/* Q4 */}
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
                   <label class="font-bold text-gray-800 text-base block">
                     4. 하루 물 섭취량은 어느 정도인가요?
@@ -197,28 +217,64 @@
               </form>
             )}
 
-            {step === 'result' && (
+            {step === 'result' && nutritionResult && (
               <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 space-y-6">
                 <div class="text-center space-y-2">
-                  <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i data-lucide="check-circle-2" class="w-10 h-10"></i>
+                  <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <i data-lucide="calculator" class="w-8 h-8"></i>
                   </div>
-                  <h2 class="text-2xl font-bold text-gray-800">영양 진단 완료!</h2>
-                  <p class="text-sm text-gray-500">오늘 섭취하신 식단 분석 결과입니다.</p>
+                  <h2 class="text-2xl font-bold text-gray-800">영양 진단 결과</h2>
+                  <div class={`inline-block px-4 py-1.5 rounded-full text-xs font-bold border ${nutritionResult.statusColor}`}>
+                    {nutritionResult.statusText}
+                  </div>
                 </div>
 
-                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200/60 space-y-3">
-                  <h3 class="font-bold text-amber-900 text-md">💡 한 줄 영양 가이드</h3>
-                  <ul class="text-sm text-amber-800 space-y-1.5 list-disc list-inside">
-                    <li>매끼 손바닥 크기만큼의 단백질 섭취를 권장합니다.</li>
-                    <li>채소류는 두 손 가득 분량을 채워 드시면 더욱 좋습니다.</li>
-                    <li>물은 생각나실 때마다 자주 한 컵씩 드셔주세요.</li>
-                  </ul>
+                {/* 추정 칼로리 표시 박스 */}
+                <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 text-center space-y-1">
+                  <span class="text-xs font-bold text-amber-800">오늘 추정 섭취 칼로리</span>
+                  <div class="text-3xl font-extrabold text-amber-900">
+                    약 {nutritionResult.estimatedCalories} <span class="text-lg font-bold">kcal</span>
+                  </div>
+                  <p class="text-xs text-amber-700 mt-1">
+                    * 어르신 하루 권장량: 약 1,600 ~ 2,000 kcal
+                  </p>
+                </div>
+
+                {/* 영양소 피드백 */}
+                <div class="space-y-2.5">
+                  <h3 class="font-bold text-gray-800 text-sm">💡 맞춤 피드백</h3>
+                  
+                  <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
+                    <div class="font-bold text-gray-700">· 단백질 섭취</div>
+                    <p class="text-gray-600">
+                      {nutritionResult.hasProtein
+                        ? '단백질을 잘 챙겨 드시고 계십니다. 근력 유지에 좋습니다.'
+                        : '달걀, 두부, 고기, 생선 등 단백질 반찬을 하루 1회 이상 꼭 챙겨 드세요.'}
+                    </p>
+                  </div>
+
+                  <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
+                    <div class="font-bold text-gray-700">· 채소 및 비타민</div>
+                    <p class="text-gray-600">
+                      {nutritionResult.hasVeggie
+                        ? '채소를 매 끼니 잘 섭취하고 계십니다.'
+                        : '소화와 비타민 섭취를 위해 푹 익힌 나물이나 채소를 매 끼니 드시면 좋습니다.'}
+                    </p>
+                  </div>
+
+                  <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
+                    <div class="font-bold text-gray-700">· 수분 보충</div>
+                    <p class="text-gray-600">
+                      {answers.water === '6컵 이상'
+                        ? '수분 섭취 상태가 훌륭합니다.'
+                        : '목이 마르지 않더라도 자주 물 한 컵씩 드시는 습관이 필요합니다.'}
+                    </p>
+                  </div>
                 </div>
 
                 <button
                   onClick={handleReset}
-                  class="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition active:scale-95"
+                  class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-2xl transition active:scale-95 shadow-sm"
                 >
                   처음으로 돌아가기
                 </button>
